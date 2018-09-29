@@ -33,9 +33,9 @@ public class GateNetwork : MonoBehaviour
 	public AnimationCurve distanceCurve;
 	public AnimationCurve heightCurve;
 	public AnimationCurve rotationCurve;
-	private int baseN = 32;
-	private int numDigits = 2;
-	private float baseRadius = 0.2f; // Radius around point to search for a gate, in fractions of a degree in baseN
+	private static int baseN = 32;
+	private static int numDigits = 2;
+	private static float baseRadius = 0.2f; // Radius around point to search for a gate, in fractions of a degree in baseN
 	private float true_radius;
 	private int maxVal;
 	private float nPerDegree;
@@ -93,11 +93,15 @@ public class GateNetwork : MonoBehaviour
 		for (int i = 0; i < 1200; i++)
 		{
 			Gate g = new Gate() { Galaxy = galaxies[0] };
-			Vector3 pos = new Vector3(
-						Utils.NextGaussian(0f, g.Galaxy.Radius * 0.9f),
-						Utils.NextGaussian(0f, g.Galaxy.Height * 0.3f),
-						Utils.NextGaussian(0f, g.Galaxy.Radius * 0.9f)
-						);
+			Vector3 pos;
+			do
+			{
+				pos = new Vector3(
+							Utils.NextGaussian(0f, g.Galaxy.Radius * 0.9f),
+							Utils.NextGaussian(0f, g.Galaxy.Height * 0.3f),
+							Utils.NextGaussian(0f, g.Galaxy.Radius * 0.9f)
+							);
+			} while (Vector3.Distance(pos, Vector3.zero) < g.Galaxy.Radius / 6f);
 			g.Position = pos;
 			gateNetwork.Add(g);
 		}
@@ -125,6 +129,14 @@ public class GateNetwork : MonoBehaviour
 		int c = gateNetwork.Count / 3;
 		for (int i = 0; i < c; i++)
 			gateNetwork.RemoveAt(Random.Range(0, gateNetwork.Count));
+
+		
+		for (int i = 0; i < gateNetwork.Count; i++)
+		{
+			Gate g = gateNetwork[i];
+			if (Vector3.Distance(g.Position, Vector3.zero) < g.Galaxy.Radius / 6f)
+				gateNetwork.RemoveAt(i);
+		}
 
 		Gate last = new Gate() { Galaxy = galaxies[0] };
 		last.Position = new Vector3(60.3f, -20f, 60.7f);
@@ -189,7 +201,6 @@ public class GateNetwork : MonoBehaviour
 
 			if (Application.isEditor)
 				Debug.Log(string.Join(", ", address.Select(i => i.ToString()).ToArray()));
-
 			
 			float y = gridMagnitude * Mathf.Sin(altitude * Mathf.Deg2Rad);
 			float hy = gridMagnitude * Mathf.Cos(altitude * Mathf.Deg2Rad);
@@ -203,10 +214,10 @@ public class GateNetwork : MonoBehaviour
 		}
 		else
 		{
-			gate.inRange = false;
-			//Debug.Log(gridPos);
-			// CRAP WE NEED ONE
 			// Recalculate vector assuming the 2D grid position is zero, convert to baseN and return reference point + desination
+			gate.inRange = false;
+
+			
 		}
 
 		address[0] = 0; //Galaxy
@@ -400,12 +411,15 @@ public class GateNetwork : MonoBehaviour
 			Gizmos.DrawLine(Vector3.zero, glast.Position);
 			Gizmos.DrawWireSphere(glast.Position, 2f);
 
+			//Gizmos.color = Color.gray;
+			//Gizmos.DrawWireSphere(Vector3.zero, galaxies[0].Radius / 6f);
+			/*
 			Handles.color = Color.gray;
 			for (int i = 0; i < 360 / 15; i++)
 			{
 				Handles.DrawWireDisc(Vector3.zero, Vector3.up, galaxies[0].Radius * 4f);
-				Handles.DrawLine(Vector3.zero, Quaternion.AngleAxis(15 * i, Vector3.up) * Vector3.right * galaxies[0].Radius * 5f);
 			}
+			*/
 		}
 	}
 
